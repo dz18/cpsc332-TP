@@ -2,9 +2,9 @@
 
     // Database Parameters
     $host = "localhost";
-    $name = "dylan";
-    $password = "test123";
-    $db = "cpsc332g26";
+    $name = "root";
+    $password = "";
+    $db = "cs332g26";
 
     // Connect to the database
     $conn = mysqli_connect($host, $name, $password, $db);

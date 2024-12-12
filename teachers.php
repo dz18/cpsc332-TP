@@ -2,9 +2,9 @@
 
     // Database Parameters
     $host = "localhost";
-    $name = "dylan";
-    $password = "test123";
-    $db = "cpsc332g26";
+    $name = "root";
+    $password = "";
+    $db = "cs332g26";
 
     // Connect to the database
     $conn = mysqli_connect($host, $name, $password, $db);
@@ -37,7 +37,7 @@
                 JOIN
                     courses AS C ON C.course_id = S.course_id
                 WHERE 
-                    S.teacher_ssn = ?
+                    S.teacher = ?
             ';
             $stmt = $conn->prepare($sql);
             $stmt->bind_param('s', $_POST['ssn']); 

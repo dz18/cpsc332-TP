@@ -2,8 +2,8 @@
 <?php
     // Database Parameters
     $host = "localhost";
-    $name = "dylan";
-    $password = "test123";
+    $name = "root";
+    $password = "";
     $db = "cs332g26";
 
     // Connect to the database
@@ -81,7 +81,7 @@
                 <button class="btn z-depth-0" name="type" value="courses">Courses</button>
                 <button class="btn z-depth-0" name="type" value="sections">Sections</button>
                 <button class="btn z-depth-0" name="type" value="enrollment_records">Enrollment Records</button>
-                <button class="btn z-depth-0 warning" name="type" value="test">debug</button>
+                <!-- <button class="btn z-depth-0 warning" name="type" value="test">debug</button> -->
             </div>
         </form>
         
