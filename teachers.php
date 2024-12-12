@@ -14,64 +14,64 @@
         echo "Connection error: " . mysqli_connect_error();
     }
 
+    $data = [];
+    $total = 0;
+    $query = '';
+
     // Check if submit btn is pressed for course catalog
     if (isset($_POST['submit-ssn'])) {
 
         if (empty($_POST['ssn'])){
-            echo "An ssn number is required <br/>";
+            $query = "no-results";
         } else {
-            // Write Query for the students enrollment record
+            // Write Query for the Professors Courses
             $sql = '
-                SELECT 
-                    courses.title, 
-                    sections.classroom,
-                    sections.meeting_days,
-                    sections.start_time,
-                    sections.end_time,
+                SELECT
+                    C.title,
+                    S.classroom,
+                    S.meeting_days,
+                    S.start_time,
+                    S.end_time
                 FROM 
-                    section as S
-                JOIN 
-                    courses ON sections.course_id = courses.course_id
+                    sections AS S
+                JOIN
+                    courses AS C ON C.course_id = S.course_id
                 WHERE 
-                    section.ssn = ?
+                    S.teacher_ssn = ?
             ';
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $_POST['cwid']); // Assuming 'id' is a string; use 'i' for integers.
+            $stmt->bind_param('s', $_POST['ssn']); 
             $stmt->execute();
             $result = $stmt->get_result();
 
             // Fetch data
-            $students = [];
             if ($result->num_rows > 0) {
-                $total = 0;
+                $query = "professor-courses";
+                $total = $result->num_rows;
                 while ($row = $result->fetch_assoc()) {
-                    $total += 1;
-                    $records[] = $row;
+                    $data[] = $row;
                 }
-                echo "Total: " . "<b>" . $total . "</b> " . "results found" . "<br>";
             } else {
-                echo "No results found.";
+                $query = "no-results";
             } // End of fetching data
 
             // Free result from memory
             $stmt->free_result();
             $stmt->close();
 
-            print_r($records);
         }  // End of validation
 
     } 
 
     // Check if submit btn is pressed for enrollment records
     if (isset($_POST['submit-course'])) {
-
         if (empty($_POST['course']) || empty($_POST['section'])){
-            echo "An course ID and section ID is required <br/>";
+            $query = "no-results";
         } else {
             $sql = '
                 SELECT 
                     ER.grade, 
-                    COUNT(*) AS StudentCount
+                    COUNT(*) AS Count
                 FROM 
                     enrollment_records AS ER
                 JOIN 
@@ -84,28 +84,25 @@
                     ER.grade
             ';
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $_POST['section'], $_POST['course']); // Assuming 'id' is a string; use 'i' for integers.
+            $stmt->bind_param('ss', $_POST['section'], $_POST['course']); // Assuming 'id' is a string; use 'i' for integers.
             $stmt->execute();
             $result = $stmt->get_result();
 
             // Fetch data
-            $students = [];
             if ($result->num_rows > 0) {
-                $total = 0;
+                $query = "grades";
+                $total = $result->num_rows;
                 while ($row = $result->fetch_assoc()) {
-                    $total += 1;
-                    $records[] = $row;
+                    $data[] = $row;
                 }
-                echo "Total: " . "<b>" . $total . "</b> " . "results found" . "<br>";
             } else {
-                echo "No results found.";
+                $query = "no-results";
             } // End of fetching data
 
             // Free result from memory
             $stmt->free_result();
             $stmt->close();
 
-            print_r($records);
         } // End of validation
 
     }
@@ -116,35 +113,93 @@
 <html lang="en">
     <?php include ('templates/header.php');?>
 
-    <section class="container grey-text">
-        <h4>For Teachers</h4>
+    <section class="container">
+        <h4 class="grey-text">For Teachers</h4>
         <hr>
-        <h6 class="center">Search Professor</h6>
-        <form action="" class="white" method="POST">
-            <label>SSN</label>
-            <input type="text" name="ssn">
-            <div class="center">
-                <input 
-                    type="submit" name="submit-ssn" 
-                    value="submit"
-                    class="btn z-depth-0"    
-                >
+
+        <!-- Forms -->
+        <div class="row grey-text">
+            <div class="flex-container">
+                <div class="card z-depth-0 flex-item">
+                    <div class="card-content">
+                        <h6 class="center">Search a Professor's Courses</h6>
+                        <form action="" class="white myForm" method="POST">
+                            <label>SSN</label>
+                            <input type="text" name="ssn">
+                            <div class="center">
+                                <input 
+                                    type="submit" name="submit-ssn" 
+                                    value="Submit"
+                                    class="btn z-depth-0"    
+                                >
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card z-depth-0 flex-item">
+                    <div class="card-content">
+                        <h6 class="center">Search for All Grades in a Section</h6>
+                        <form action="" class="white myForm" method="POST">
+                            <label class="center">Course ID</label>
+                            <input type="text" name="course">
+                            <label class="center">Section ID</label>
+                            <input type="text" name="section">
+                            <div class="center">
+                                <input 
+                                    type="submit" name="submit-course" 
+                                    value="Submit"
+                                    class="btn z-depth-0"    
+                                >
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </form>
-        <h6 class="center">Search Grade Results</h6>
-        <form action="" class="white" method="POST">
-            <label class="center">Course ID</label>
-            <input type="text" name="course">
-            <label class="center">Section ID</label>
-            <input type="text" name="section">
-            <div class="center">
-                <input 
-                    type="submit" name="submit-course" 
-                    value="submit"
-                    class="btn z-depth-0"    
-                >
+        </div>
+
+        <!-- Results -->
+        <div>
+            <div class="grey-text">
+                <?php if ($query == "professor-courses") { ?>
+                    
+                    <h4>Results for: <b>Professors Courses</b></h4>
+                    <h6>Total Results Found: <b><?php echo $total;?></b></h6>
+                <?php } else if ($query == "grades") { ?>
+                    
+                    <h4>Results for: <b>Total Class Grades</b></h4>
+                    <h6>Total Results Found: <b><?php echo $total;?></b></h6>
+                <?php } else if ($query == "no-results") { ?>
+                    <h4>No Results Found. <b>Try Again</b></h4>
+                <?php } ?>
             </div>
-        </form>
+            <table>
+                <thead>
+                    <tr>
+                        <?php if (!empty($data)) {
+                            foreach (array_keys($data[0]) as $header) {
+                                echo "<th>" . htmlspecialchars($header) . "</th>";
+                            }
+                        } ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($data as $row) { ?>
+                        <tr>
+                            <?php foreach ($row as $value) { ?>
+                                <td><?php echo htmlspecialchars($value); ?></td>
+                            <?php } ?>
+                        </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+        
+        
+
+
     </section>
 
     <?php include ('templates/footer.php');?>
